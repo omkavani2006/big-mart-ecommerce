@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cart – Big Mart</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --nav: #0f0f1a;
+    --accent: #f59e0b;
+    --accent2: #f97316;
+    --purple: #6366f1;
+    --purple2: #818cf8;
+    --bg: #0f0f1a;
+    --border: rgba(255,255,255,0.10);
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99,102,241,0.14) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 75%, rgba(245,158,11,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(249,115,22,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: float 9s ease-in-out infinite; }
+  .orb1 { width: 320px; height: 320px; background: rgba(99,102,241,0.12); top: -100px; left: -80px; animation-delay: 0s; }
+  .orb2 { width: 220px; height: 220px; background: rgba(245,158,11,0.10); bottom: 80px; right: -60px; animation-delay: 3.5s; }
+  .orb3 { width: 160px; height: 160px; background: rgba(249,115,22,0.08); top: 55%; left: 65%; animation-delay: 6s; }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-28px) scale(1.05); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* NAVBAR */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,26,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 800; color: var(--accent);
+    letter-spacing: -0.5px; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  }
+  .logo span { color: var(--purple2); }
+  .navbar nav { margin-left: auto; }
+  .navbar nav ul { list-style: none; display: flex; gap: 4px; }
+  .navbar nav a {
+    text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid transparent;
+    transition: var(--transition); white-space: nowrap;
+  }
+  .navbar nav a:hover { color: var(--text); border-color: var(--border); background: rgba(255,255,255,0.05); }
+  .navbar nav a.active { color: var(--accent); border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.06); }
+  .navbar nav a.cta { color: #1a1a2e; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; font-weight: 700; }
+  .navbar nav a.cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* PAGE HEADER */
+  .page-header {
+    position: relative; z-index: 1;
+    padding: 52px 32px 20px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.22);
+    border-radius: 999px; padding: 4px 14px;
+    font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 12px;
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4vw, 38px); font-weight: 800;
+    letter-spacing: -1px; color: var(--text);
+  }
+  .page-header .sub { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  /* LAYOUT */
+  .cart-layout {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    padding: 0 32px 60px;
+    align-items: start;
+  }
+
+  /* CART ITEMS */
+  .cart-items-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+  .cart-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    backdrop-filter: blur(12px);
+    transition: var(--transition);
+    animation: fadeUp 0.4s ease both;
+  }
+  .cart-item:hover {
+    border-color: rgba(245,158,11,0.25);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+  }
+
+  .cart-item-img {
+    width: 80px; height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .cart-item-info { flex: 1; min-width: 0; }
+  .cart-item-cat {
+    font-size: 10px; font-weight: 600; color: var(--purple2);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+  }
+  .cart-item-name {
+    font-size: 14px; font-weight: 600; color: var(--text);
+    margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cart-item-price { font-size: 18px; font-weight: 800; color: var(--accent); }
+
+  .cart-item-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+  .qty-control {
+    display: flex; align-items: center; gap: 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  }
+  .qty-btn {
+    width: 34px; height: 34px;
+    background: transparent; border: none;
+    color: var(--text); font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: var(--transition);
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .qty-btn:hover { background: rgba(245,158,11,0.15); color: var(--accent); }
+  .qty-num {
+    min-width: 34px; text-align: center;
+    font-size: 14px; font-weight: 700; color: var(--text);
+    border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+    line-height: 34px;
+  }
+
+  .btn-remove-item {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+    color: #f87171; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: var(--transition); padding: 0;
+  }
+  .btn-remove-item:hover { background: rgba(239,68,68,0.2); transform: scale(1.05); }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 88px;
+  }
+  .summary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-weight: 800;
+    color: var(--text); margin-bottom: 20px;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between;
+    font-size: 14px; color: var(--muted);
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .summary-row:last-of-type { border-bottom: none; }
+  .summary-row.total {
+    font-size: 18px; font-weight: 800;
+    color: var(--text); margin-top: 4px;
+  }
+  .summary-row.total span:last-child { color: var(--accent); }
+  .summary-row .free { color: #86efac; font-weight: 600; }
+  .summary-savings {
+    background: rgba(134,239,172,0.08);
+    border: 1px solid rgba(134,239,172,0.2);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 13px; color: #86efac; font-weight: 600;
+    text-align: center; margin: 16px 0;
+  }
+  .btn-checkout {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm);
+    color: #1a1a2e; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 20px rgba(245,158,11,0.28);
+    margin-top: 4px;
+  }
+  .btn-checkout:hover {
+    opacity: 0.9; transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(245,158,11,0.4);
+  }
+  .btn-continue {
+    width: 100%; padding: 11px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: var(--transition); margin-top: 10px;
+    text-decoration: none; display: block; text-align: center;
+  }
+  .btn-continue:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 80px 20px;
+  }
+  .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+  .empty-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px;
+  }
+  .empty-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+  .btn-shop {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #1a1a2e; font-family: 'DM Sans', sans-serif;
+    font-weight: 700; font-size: 15px; padding: 13px 32px;
+    border-radius: 999px; border: none; cursor: pointer;
+    text-decoration: none; transition: var(--transition);
+    box-shadow: 0 4px 24px rgba(245,158,11,0.28);
+  }
+  .btn-shop:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(245,158,11,0.4); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b; border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 22px;
+    font-size: 14px; color: var(--text); z-index: 999;
+    backdrop-filter: blur(10px);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.removed { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+  footer {
+    position: relative; z-index: 10;
+    text-align: center; padding: 24px 20px;
+    font-size: 13px; color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(15,15,26,0.7);
+    backdrop-filter: blur(12px);
+  }
+  footer strong { color: var(--accent); }
+
+  @media (max-width: 900px) {
+    .cart-layout { grid-template-columns: 1fr; }
+    .order-summary { position: static; }
+  }
+  @media (max-width: 768px) {
+    .navbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+    .navbar nav { margin-left: 0; }
+    .page-header { padding: 36px 16px 16px; }
+    .cart-layout { padding: 0 16px 36px; }
+    .cart-item-name { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <header class="navbar">
+    <a href="index.html" class="logo">Big <span>Mart</span></a>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="wishlist.html">♡ Wishlist</a></li>
+        <li><a href="cart.html" class="active">🛒 Cart (<span id="cart-count">0</span>)</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html" class="cta">Sign Up</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="page-header">
+    <div>
+      <div class="page-badge">🛒 Your Cart</div>
+      <h1>Shopping Cart</h1>
+      <p class="sub" id="cart-sub">0 items</p>
+    </div>
+  </div>
+
+  <div class="cart-layout" id="cart-layout">
+    <!-- filled by JS -->
+  </div>
+
+  <footer>
+    <p><strong>Big Mart</strong> &copy; 2026 — Your Favourite Online Store</p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  let cart = JSON.parse(localStorage.getItem('bb_cart') || '[]');
+
+  function saveCart() { localStorage.setItem('bb_cart', JSON.stringify(cart)); }
+
+  function updateCartCount() {
+    const total = cart.reduce((s, i) => s + i.qty, 0);
+    document.querySelectorAll('#cart-count').forEach(el => el.textContent = total);
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function changeQty(id, delta) {
+    const item = cart.find(i => i.id === id);
+    if (!item) return;
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+    saveCart();
+    render();
+  }
+
+  function removeItem(id) {
+    cart = cart.filter(i => i.id !== id);
+    saveCart();
+    showToast('Item removed from cart', 'removed');
+    render();
+  }
+
+  function calcSubtotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+  function calcDiscount() { return cart.reduce((s, i) => s + ((i.oldPrice || i.price) - i.price) * i.qty, 0); }
+
+  function render() {
+    updateCartCount();
+    const layout = document.getElementById('cart-layout');
+    const sub = document.getElementById('cart-sub');
+    const totalItems = cart.reduce((s, i) => s + i.qty, 0);
+    sub.textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
+
+    if (cart.length === 0) {
+      layout.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🛒</div>
+          <div class="empty-title">Your cart is empty</div>
+          <p class="empty-sub">Looks like you haven't added anything yet.</p>
+          <a href="index.html" class="btn-shop">Start Shopping →</a>
+        </div>`;
+      return;
+    }
+
+    const subtotal = calcSubtotal();
+    const discount = calcDiscount();
+    const delivery = subtotal >= 499 ? 0 : 49;
+    const total = subtotal + delivery;
+    const savings = discount + (delivery === 0 ? 49 : 0);
+
+    layout.innerHTML = `
+      <div class="cart-items-wrap">
+        ${cart.map((item, i) => `
+          <div class="cart-item" style="animation-delay:${i * 0.07}s">
+            <img class="cart-item-img" src="${item.img}" alt="${item.name}"/>
+            <div class="cart-item-info">
+              <div class="cart-item-cat">${item.category}</div>
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</div>
+            </div>
+            <div class="cart-item-actions">
+              <div class="qty-control">
+                <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+                <div class="qty-num">${item.qty}</div>
+                <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+              </div>
+              <button class="btn-remove-item" onclick="removeItem(${item.id})" title="Remove">✕</button>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div class="order-summary">
+        <div class="summary-title">Order Summary</div>
+        <div class="summary-row">
+          <span>Subtotal (${totalItems} items)</span>
+          <span>₹${subtotal.toLocaleString('en-IN')}</span>
+        </div>
+        ${discount > 0 ? `<div class="summary-row"><span>Discount</span><span style="color:#86efac;">−₹${discount.toLocaleString('en-IN')}</span></div>` : ''}
+        <div class="summary-row">
+          <span>Delivery</span>
+          <span class="${delivery === 0 ? 'free' : ''}">${delivery === 0 ? 'FREE' : '₹' + delivery}</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span>₹${total.toLocaleString('en-IN')}</span>
+        </div>
+        ${savings > 0 ? `<div class="summary-savings">🎉 You're saving ₹${savings.toLocaleString('en-IN')} on this order!</div>` : ''}
+        <button class="btn-checkout" onclick="window.location.href='payment.html'">Proceed to Payment →</button>
+        <a href="index.html" class="btn-continue">← Continue Shopping</a>
+      </div>`;
+  }
+
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Payment – Big Mart</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --accent: #f59e0b;
+    --accent2: #f97316;
+    --purple: #6366f1;
+    --purple2: #818cf8;
+    --bg: #0f0f1a;
+    --border: rgba(255,255,255,0.10);
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(99,102,241,0.14) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 75%, rgba(245,158,11,0.10) 0%, transparent 55%);
+    pointer-events: none; z-index: 0;
+  }
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: float 9s ease-in-out infinite; }
+  .orb1 { width: 320px; height: 320px; background: rgba(99,102,241,0.12); top: -100px; left: -80px; }
+  .orb2 { width: 220px; height: 220px; background: rgba(245,158,11,0.10); bottom: 80px; right: -60px; animation-delay: 3.5s; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-28px); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* NAVBAR */
+  .navbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,26,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px; display: flex; align-items: center; gap: 20px;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 800; color: var(--accent);
+    letter-spacing: -0.5px; text-decoration: none; white-space: nowrap;
+  }
+  .logo span { color: var(--purple2); }
+  .navbar nav { margin-left: auto; }
+  .navbar nav ul { list-style: none; display: flex; gap: 4px; }
+  .navbar nav a {
+    text-decoration: none; color: var(--muted); font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid transparent;
+    transition: var(--transition); white-space: nowrap;
+  }
+  .navbar nav a:hover { color: var(--text); border-color: var(--border); background: rgba(255,255,255,0.05); }
+  .navbar nav a.cta { color: #1a1a2e; background: linear-gradient(135deg, var(--accent), var(--accent2)); font-weight: 700; }
+
+  /* MAIN */
+  .main {
+    position: relative; z-index: 1;
+    display: flex; justify-content: center;
+    padding: 52px 24px 60px;
+  }
+
+  .payment-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 40px;
+    width: 100%; max-width: 520px;
+    backdrop-filter: blur(12px);
+    animation: fadeUp 0.6s ease both;
+  }
+
+  /* STEPS */
+  .steps {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 32px;
+  }
+  .step {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1;
+  }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+    color: var(--muted); transition: var(--transition);
+  }
+  .step.done .step-dot { background: rgba(134,239,172,0.15); border-color: rgba(134,239,172,0.4); color: #86efac; }
+  .step.active .step-dot { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; color: #1a1a2e; }
+  .step-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .step.active .step-label { color: var(--accent); }
+  .step.done .step-label { color: #86efac; }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 6px; margin-bottom: 20px; }
+
+  /* CARD VISUAL */
+  .card-visual {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    min-height: 160px;
+    border: 1px solid rgba(99,102,241,0.3);
+  }
+  .card-visual::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .card-visual::after {
+    content: '';
+    position: absolute; bottom: -30px; left: 40px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+  .card-chip {
+    width: 36px; height: 26px;
+    background: linear-gradient(135deg, var(--accent), #ca8a04);
+    border-radius: 5px; margin-bottom: 24px;
+    position: relative; z-index: 1;
+  }
+  .card-number-display {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px; font-weight: 600; letter-spacing: 3px;
+    color: rgba(255,255,255,0.9); margin-bottom: 16px;
+    position: relative; z-index: 1;
+  }
+  .card-meta { display: flex; justify-content: space-between; position: relative; z-index: 1; }
+  .card-meta-label { font-size: 10px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+  .card-meta-value { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); margin-top: 2px; }
+
+  /* FORM */
+  .section-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 7px; letter-spacing: 0.3px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; outline: none;
+    transition: var(--transition);
+  }
+  .form-group input::placeholder { color: rgba(148,163,184,0.4); }
+  .form-group input:focus, .form-group select:focus {
+    border-color: rgba(245,158,11,0.4);
+    background: rgba(245,158,11,0.04);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.08);
+  }
+  .form-group select { appearance: none; cursor: pointer; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* PAYMENT METHODS */
+  .pay-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+  .pay-method {
+    padding: 12px 8px; border-radius: 12px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    text-align: center; cursor: pointer; transition: var(--transition);
+  }
+  .pay-method:hover { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+  .pay-method.active {
+    border-color: var(--accent); background: rgba(245,158,11,0.08);
+    box-shadow: 0 0 0 1px rgba(245,158,11,0.25);
+  }
+  .pay-method-icon { font-size: 20px; margin-bottom: 5px; }
+  .pay-method-label { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .pay-method.active .pay-method-label { color: var(--accent); }
+
+  /* ORDER TOTAL ROW */
+  .order-total-row {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .order-total-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .order-total-amount { font-size: 22px; font-weight: 800; color: var(--accent); }
+
+  .btn-pay {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius-sm);
+    color: #1a1a2e; font-family: 'DM Sans', sans-serif;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 24px rgba(245,158,11,0.3);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-pay:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(245,158,11,0.42); }
+  .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .secure-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 12px; color: var(--muted); margin-top: 14px;
+  }
+
+  /* SUCCESS SCREEN */
+  .success-screen {
+    display: none; text-align: center; padding: 20px 0;
+    animation: fadeUp 0.5s ease both;
+  }
+  .success-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(134,239,172,0.12); border: 2px solid rgba(134,239,172,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; margin: 0 auto 20px;
+  }
+  .success-screen h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+  }
+  .success-screen p { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  .order-id {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    font-size: 13px; color: var(--muted); margin-bottom: 24px;
+  }
+  .order-id strong { color: var(--accent); }
+
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1e293b; border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 22px;
+    font-size: 14px; color: var(--text); z-index: 999;
+    backdrop-filter: blur(10px);
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+  .toast.success { border-color: rgba(134,239,172,0.4); color: #86efac; }
+
+  footer {
+    position: relative; z-index: 10;
+    text-align: center; padding: 24px 20px;
+    font-size: 13px; color: var(--muted);
+    border-top: 1px solid var(--border);
+    background: rgba(15,15,26,0.7); backdrop-filter: blur(12px);
+  }
+  footer strong { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .navbar { flex-wrap: wrap; gap: 10px; padding: 12px 16px; }
+    .navbar nav { margin-left: 0; }
+    .payment-card { padding: 24px 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .pay-methods { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <header class="navbar">
+    <a href="index.html" class="logo">Big <span>Mart</span></a>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">🛒 Cart</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html" class="cta">Sign Up</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="main">
+    <div class="payment-card">
+
+      <!-- STEPS -->
+      <div class="steps">
+        <div class="step done">
+          <div class="step-dot">✓</div>
+          <div class="step-label">Cart</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step done">
+          <div class="step-dot">✓</div>
+          <div class="step-label">Address</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step active">
+          <div class="step-dot">3</div>
+          <div class="step-label">Payment</div>
+        </div>
+      </div>
+
+      <!-- SUCCESS (hidden by default) -->
+      <div class="success-screen" id="success-screen">
+        <div class="success-icon">✓</div>
+        <h2>Payment Successful!</h2>
+        <p>Thank you for shopping with Big Mart.<br/>Your order is confirmed and will be delivered soon.</p>
+        <div class="order-id">Order ID: <strong id="order-id-val">#BB-000000</strong></div>
+        <a href="index.html" style="display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1a2e;font-family:'DM Sans',sans-serif;font-weight:700;font-size:15px;padding:13px 32px;border-radius:999px;text-decoration:none;transition:var(--transition);box-shadow:0 4px 24px rgba(245,158,11,0.28);">Continue Shopping →</a>
+      </div>
+
+      <!-- PAYMENT FORM -->
+      <div id="payment-form">
+
+        <!-- PAYMENT METHODS -->
+        <div class="section-label">Pay with</div>
+        <div class="pay-methods" id="pay-methods">
+          <div class="pay-method active" onclick="selectMethod(this, 'card')">
+            <div class="pay-method-icon">💳</div>
+            <div class="pay-method-label">Card</div>
+          </div>
+          <div class="pay-method" onclick="selectMethod(this, 'upi')">
+            <div class="pay-method-icon">📱</div>
+            <div class="pay-method-label">UPI</div>
+          </div>
+          <div class="pay-method" onclick="selectMethod(this, 'cod')">
+            <div class="pay-method-icon">💵</div>
+            <div class="pay-method-label">Cash</div>
+          </div>
+        </div>
+
+        <!-- CARD FIELDS -->
+        <div id="card-section">
+          <!-- CARD VISUAL -->
+          <div class="card-visual">
+            <div class="card-chip"></div>
+            <div class="card-number-display" id="card-display">•••• •••• •••• ••••</div>
+            <div class="card-meta">
+              <div>
+                <div class="card-meta-label">Card Holder</div>
+                <div class="card-meta-value" id="card-name-display">YOUR NAME</div>
+              </div>
+              <div>
+                <div class="card-meta-label">Expires</div>
+                <div class="card-meta-value" id="card-exp-display">MM/YY</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)"/>
+          </div>
+          <div class="form-group">
+            <label>Card Holder Name</label>
+            <input type="text" id="card-name" placeholder="Name as on card" oninput="updateCardDisplay()"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input type="text" id="card-exp" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)"/>
+            </div>
+            <div class="form-group">
+              <label>CVV</label>
+              <input type="password" id="card-cvv" placeholder="•••" maxlength="3"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- UPI FIELDS -->
+        <div id="upi-section" style="display:none;">
+          <div class="form-group">
+            <label>UPI ID</label>
+            <input type="text" id="upi-id" placeholder="yourname@upi"/>
+          </div>
+        </div>
+
+        <!-- COD SECTION -->
+        <div id="cod-section" style="display:none;">
+          <div style="background:rgba(134,239,172,0.08);border:1px solid rgba(134,239,172,0.2);border-radius:12px;padding:16px;margin-bottom:8px;">
+            <div style="font-size:14px;font-weight:600;color:#86efac;margin-bottom:6px;">Cash on Delivery</div>
+            <div style="font-size:13px;color:var(--muted);">Pay in cash when your order arrives at your doorstep. No advance payment needed.</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ORDER TOTAL -->
+        <div class="order-total-row">
+          <div class="order-total-label">Order Total</div>
+          <div class="order-total-amount" id="pay-total">₹0</div>
+        </div>
+
+        <button class="btn-pay" id="pay-btn" onclick="processPayment()">
+          <span id="pay-btn-text">🔒 Pay Securely</span>
+        </button>
+
+        <div class="secure-note">
+          🔒 256-bit SSL encryption · Your data is safe
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p><strong>Big Mart</strong> &copy; 2026 — Your Favourite Online Store</p>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  let activeMethod = 'card';
+  const cart = JSON.parse(localStorage.getItem('bb_cart') || '[]');
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
+  // Show order total
+  document.getElementById('pay-total').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('pay-btn-text').textContent =
+    '🔒 Pay ₹' + total.toLocaleString('en-IN') + ' Securely';
+
+  function selectMethod(el, method) {
+    activeMethod = method;
+    document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('card-section').style.display = method === 'card' ? 'block' : 'none';
+    document.getElementById('upi-section').style.display = method === 'upi' ? 'block' : 'none';
+    document.getElementById('cod-section').style.display = method === 'cod' ? 'block' : 'none';
+
+    const payText = method === 'cod'
+      ? 'Confirm Order (Cash on Delivery)'
+      : '🔒 Pay ₹' + total.toLocaleString('en-IN') + ' Securely';
+    document.getElementById('pay-btn-text').textContent = payText;
+  }
+
+  function formatCard(input) {
+    let val = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = val.replace(/(.{4})/g, '$1 ').trim();
+    const masked = val.padEnd(16, '•');
+    document.getElementById('card-display').textContent =
+      masked.substring(0,4) + ' ' + masked.substring(4,8) + ' ' + masked.substring(8,12) + ' ' + masked.substring(12,16);
+  }
+
+  function formatExpiry(input) {
+    let val = input.value.replace(/\D/g, '').substring(0, 4);
+    if (val.length >= 2) val = val.substring(0,2) + '/' + val.substring(2);
+    input.value = val;
+    document.getElementById('card-exp-display').textContent = val || 'MM/YY';
+  }
+
+  function updateCardDisplay() {
+    const name = document.getElementById('card-name').value || 'YOUR NAME';
+    document.getElementById('card-name-display').textContent = name.toUpperCase().substring(0, 22);
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  function validate() {
+    if (activeMethod === 'card') {
+      const num = document.getElementById('card-number').value.replace(/\s/g, '');
+      const name = document.getElementById('card-name').value.trim();
+      const exp = document.getElementById('card-exp').value;
+      const cvv = document.getElementById('card-cvv').value;
+      if (num.length < 16) { showToast('Enter a valid 16-digit card number', 'error'); return false; }
+      if (!name) { showToast('Enter card holder name', 'error'); return false; }
+      if (exp.length < 5) { showToast('Enter valid expiry date', 'error'); return false; }
+      if (cvv.length < 3) { showToast('Enter valid CVV', 'error'); return false; }
+    }
+    if (activeMethod === 'upi') {
+      const upi = document.getElementById('upi-id').value.trim();
+      if (!upi.includes('@')) { showToast('Enter a valid UPI ID (e.g. name@upi)', 'error'); return false; }
+    }
+    return true;
+  }
+
+  function processPayment() {
+    if (!validate()) return;
+    const btn = document.getElementById('pay-btn');
+    btn.disabled = true;
+    document.getElementById('pay-btn-text').textContent = 'Processing…';
+
+    setTimeout(() => {
+      // Clear cart
+      localStorage.removeItem('bb_cart');
+
+      // Generate order ID
+      const orderId = '#BB-' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('order-id-val').textContent = orderId;
+
+      // Show success
+      document.getElementById('payment-form').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+      document.querySelector('.steps').style.display = 'none';
+    }, 1800);
+  }
+</script>
+</body>
+</html>
